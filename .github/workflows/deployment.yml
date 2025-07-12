@@ -33,7 +33,7 @@ jobs:
         run: docker build -f ./dockerfile -t medusa-backend ./medusa-backend
 
       - name: Tag Docker image
-        run: docker tag medusa-backend:latest <your-account-id>.dkr.ecr.us-east-1.amazonaws.com/medusa-backend:latest
+        run: docker tag medusa-backend:latest 061039787029.dkr.ecr.us-east-1.amazonaws.com/medusa-backend:latest
 
 
       - name: Push Docker image
