@@ -1,0 +1,42 @@
+name:deploying Medusa backend
+
+
+on:
+  push:
+      branches:[main]
+
+jobs:
+  deploy:
+      runs-on: ubuntu-latest
+      steps:
+         - name: checking out the code 
+           uses: actions/checkout@v3
+
+
+         - name: configuring AWS Credentials
+         - uses: aws-actions/configuring aws credentials
+           with: 
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: us-east-1 
+          name: loging to AWS ECR
+            run: aws ecr get-login-password --region us-east-1 | \
+            docker login --username AWS --password-stdin 061039787029.dkr.ecr.us-east-1.amazonaws.com
+         - name: building docker image
+           run: docker build -t medusa-backend .
+
+         - name: tagging docker image
+            run: docker tag medusa-backend:latest 061039787029.dkr.ecr.us-east-1.amazonaws.com/medusa-backend:latest
+
+         - name: pushing docker image
+           run: docker push 061039787029.dkr.ecr.us-east-1.amazonaws.com/medusa-backend:latest
+
+         - name: Terraform Init
+        working-directory: ./terraform
+        run: terraform init
+
+         - name: Terraform Apply
+        working-directory: ./terraform
+        run: terraform apply -auto-approve
+
+
