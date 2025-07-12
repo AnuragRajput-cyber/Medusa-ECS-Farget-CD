@@ -77,17 +77,39 @@ resource "aws_ecs_cluster" "medusa_Cluster" {
   name = "medusa-cluster"
 }
 
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = "ecsTaskExecutionRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+      Effect = "Allow"
+      Sid = ""
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
 resource "aws_ecs_task_definition" "medusa_task_definition" {
   family                   = "medusa-task"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"
   memory                   = "1024"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  # Add this line
 
   container_definitions = jsonencode([
     {
       name      = "medusa",
-      image     = "${aws_ecr_repository.medusaImage_repo.repository_url}:latest",
+      image     = "public.ecr.aws/v7f0w4r6/medusa-backend:latest",
       essential = true,
       portMappings = [
         { containerPort = 9000 }
@@ -105,6 +127,7 @@ resource "aws_ecs_task_definition" "medusa_task_definition" {
     }
   ])
 }
+
 
 resource "aws_ecs_service" "medusa_service" {
   name            = "medusa-service"
