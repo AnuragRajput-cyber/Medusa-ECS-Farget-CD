@@ -21,19 +21,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Log in to ECR
-        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.us-east-1.amazonaws.com
+      - name: Logging in to AWS ECR
+        run: aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+        
 
-      - name: Build Docker image
+      - name: Building Docker image
         run: docker build -f ./dockerfile -t medusa-backend ./medusa-backend
 
       - name: Tag Docker image
         run: docker tag medusa-backend:latest <your-account-id>.dkr.ecr.us-east-1.amazonaws.com/medusa-backend:latest
 
-      - name: Push Docker image
-        run: docker push <your-account-id>.dkr.ecr.us-east-1.amazonaws.com/medusa-backend:latest
-
-      - name: Setup Terraform
+      - name: Pushing Docker image
+        run: docker push public.ecr.aws/v7f0w4r6/medusa-backend:latest
+      - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
@@ -41,14 +41,6 @@ jobs:
       - name: Terraform Init
         working-directory: ./terraform
         run: terraform init
-
-      - name: Terraform Import ECR repository (safe)
-        working-directory: ./terraform
-        run: terraform import aws_ecr_repository.medusaImage_repo medusa-backend || echo "ECR repo already imported"
-
-      - name: Terraform Plan
-        working-directory: ./terraform
-        run: terraform plan -var="DB_password=${{ secrets.DB_PASSWORD }}"
 
       - name: Terraform Apply
         working-directory: ./terraform
