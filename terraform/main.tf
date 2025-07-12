@@ -2,6 +2,19 @@ resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
 
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+}
+
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+}
+
 resource "aws_subnet" "public_subnet_1" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
@@ -16,6 +29,15 @@ resource "aws_subnet" "public_subnet_2" {
   availability_zone       = "us-east-1b"
 }
 
+resource "aws_route_table_association" "subnet_1_assoc" {
+  subnet_id      = aws_subnet.public_subnet_1.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table_association" "subnet_2_assoc" {
+  subnet_id      = aws_subnet.public_subnet_2.id
+  route_table_id = aws_route_table.public_rt.id
+}
 
 resource "aws_security_group" "medusa_sg" {
   name   = "ecs_security_group"
@@ -44,6 +66,7 @@ resource "aws_db_instance" "medusa_db" {
   username            = "postgres"
   password            = var.DB_password
   skip_final_snapshot = true
+  publicly_accessible = true
 }
 
 resource "aws_ecr_repository" "medusaImage_repo" {
