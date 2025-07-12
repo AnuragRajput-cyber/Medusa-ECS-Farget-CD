@@ -23,7 +23,8 @@ jobs:
           aws-region: us-east-1
 
       - name: Logging in to AWS ECR
-        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 061039787029.dkr.ecr.us-east-1.amazonaws.com
+        run: aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+        
 
       - name: Building Docker image
         run: docker build -f ./dockerfile -t medusa-backend ./medusa-backend
