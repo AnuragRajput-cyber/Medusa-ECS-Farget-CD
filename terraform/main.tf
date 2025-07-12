@@ -18,9 +18,6 @@ resource "aws_subnet" "public_subnet_2" {
 resource "aws_security_group" "medusa_sg" {
   name   = "ecs_security_group"
   vpc_id = aws_vpc.main
-
-
-
   ingress {
     description = "Allow HTTP"
     from_port   = 80
@@ -28,7 +25,6 @@ resource "aws_security_group" "medusa_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -42,7 +38,7 @@ resource "aws_db_instance" "meedusa_db" {
   engine              = "postgres"
   instance_class      = db.t3.micro
   username            = "postgres"
-  password            = var.DB_PASSWORD
+  password            = var.DB_password
   skip_final_snapshot = true
 }
 resource "aws_ecr_repository" "medusaImage_repo" {
@@ -68,7 +64,7 @@ resource "aws_ecs_task_definition" "medusa_task_definition" {
       ]
       environment = [{
         name  = "DATABASE_URL"
-        value = "postgres://postgres:${var.DB_PASSWORD}@${aws_db_instance.medusa_db.address}:5432/medusadb"
+        value = "postgres://postgres:${var.DB_password}@${aws_db_instance.medusa_db.address}:5432/medusadb"
         },
         {
           name  = "JWT_SECRET"
