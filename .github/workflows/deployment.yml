@@ -21,31 +21,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-<<<<<<< HEAD
-      - name: Log in to ECR
-        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.us-east-1.amazonaws.com
-=======
-      - name: Logging in to AWS ECR
+      - name: Log in to Public ECR
         run: aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
->>>>>>> 24657a434bd94bd5f82edb0c32e470c74210f200
 
       - name: Build Docker image
         run: docker build -f ./dockerfile -t medusa-backend ./medusa-backend
 
       - name: Tag Docker image
-        run: docker tag medusa-backend:latest <your-account-id>.dkr.ecr.us-east-1.amazonaws.com/medusa-backend:latest
+        run: docker tag medusa-backend:latest public.ecr.aws/v7f0w4r6/medusa-backend:latest
 
-<<<<<<< HEAD
       - name: Push Docker image
-        run: docker push 061039787029.dkr.ecr.us-east-1.amazonaws.com/medusa-backend:latest
-
-      - name: Setup Terraform
-=======
-      - name: Pushing Docker image
         run: docker push public.ecr.aws/v7f0w4r6/medusa-backend:latest
 
       - name: Install Terraform
->>>>>>> 24657a434bd94bd5f82edb0c32e470c74210f200
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
@@ -54,25 +42,13 @@ jobs:
         working-directory: ./terraform
         run: terraform init
 
-<<<<<<< HEAD
-      - name: Terraform Import ECR repository (safe)
+      - name: Terraform Import ECR Repository (optional safe import)
         working-directory: ./terraform
-        run: terraform import aws_ecr_repository.medusaImage_repo medusa-backend || echo "ECR repo already imported"
+        run: terraform import aws_ecr_repository.medusaImage_repo medusa-backend || echo "Public ECR repo already managed"
 
       - name: Terraform Plan
         working-directory: ./terraform
         run: terraform plan -var="DB_password=${{ secrets.DB_PASSWORD }}"
-=======
-      
-      - name: Terraform Import ECR Repository
-        working-directory: ./terraform
-        run: terraform import aws_ecr_repository.medusaImage_repo medusa-backend || echo "ECR repo already imported"
-
-
-      - name: Terraform Import Target Group
-        working-directory: ./terraform
-        run: terraform import aws_lb_target_group.medusa_tg arn:aws:elasticloadbalancing:us-east-1:YOUR_ACCOUNT_ID:targetgroup/medusa-target-group/XXXXXXXXXXXX || echo "Target group already imported"
->>>>>>> 24657a434bd94bd5f82edb0c32e470c74210f200
 
       - name: Terraform Apply
         working-directory: ./terraform
