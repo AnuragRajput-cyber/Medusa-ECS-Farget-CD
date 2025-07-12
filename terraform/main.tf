@@ -1,18 +1,12 @@
+# terraform/main.tf
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+# --- VPC ---
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main.id
-}
-
-resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
-  }
 }
 
 resource "aws_subnet" "public_subnet_1" {
@@ -29,15 +23,6 @@ resource "aws_subnet" "public_subnet_2" {
   availability_zone       = "us-east-1b"
 }
 
-resource "aws_route_table_association" "subnet_1_assoc" {
-  subnet_id      = aws_subnet.public_subnet_1.id
-  route_table_id = aws_route_table.public_rt.id
-}
-
-resource "aws_route_table_association" "subnet_2_assoc" {
-  subnet_id      = aws_subnet.public_subnet_2.id
-  route_table_id = aws_route_table.public_rt.id
-}
 
 resource "aws_security_group" "medusa_sg" {
   name   = "ecs_security_group"
@@ -54,10 +39,11 @@ resource "aws_security_group" "medusa_sg" {
   egress {
     from_port   = 0
     to_port     = 0
-    protocol    = -1
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 
 resource "aws_db_instance" "medusa_db" {
   allocated_storage   = 20
@@ -66,34 +52,37 @@ resource "aws_db_instance" "medusa_db" {
   username            = "postgres"
   password            = var.DB_password
   skip_final_snapshot = true
-  publicly_accessible = true
 }
 
-resource "aws_ecr_repository" "medusaImage_repo" {
-  name = "medusa-backend"
+
+data "aws_ecrpublic_authorization_token" "token" {}
+
+data "aws_lb_target_group" "medusa_tg" {
+  name = "medusa-target-group"
 }
 
-resource "aws_ecs_cluster" "medusa_Cluster" {
+
+resource "aws_ecs_cluster" "medusa_cluster" {
   name = "medusa-cluster"
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecsTaskExecutionRole"
-
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
       }
-      Effect = "Allow"
-      Sid = ""
-    }]
+    ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_attachment" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
@@ -104,7 +93,7 @@ resource "aws_ecs_task_definition" "medusa_task_definition" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"
   memory                   = "1024"
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  # Add this line
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
@@ -128,10 +117,9 @@ resource "aws_ecs_task_definition" "medusa_task_definition" {
   ])
 }
 
-
 resource "aws_ecs_service" "medusa_service" {
   name            = "medusa-service"
-  cluster         = aws_ecs_cluster.medusa_Cluster.id
+  cluster         = aws_ecs_cluster.medusa_cluster.id
   task_definition = aws_ecs_task_definition.medusa_task_definition.arn
   desired_count   = 1
   launch_type     = "FARGATE"
@@ -146,49 +134,8 @@ resource "aws_ecs_service" "medusa_service" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.medusa_tg.arn
+    target_group_arn = data.aws_lb_target_group.medusa_tg.arn
     container_name   = "medusa"
     container_port   = 9000
-  }
-
-  depends_on = [aws_lb_listener.http_listener]
-}
-
-resource "aws_lb" "medusa_alb" {
-  name               = "medusa-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.medusa_sg.id]
-  subnets = [
-    aws_subnet.public_subnet_1.id,
-    aws_subnet.public_subnet_2.id
-  ]
-}
-
-resource "aws_lb_target_group" "medusa_tg" {
-  name        = "medusa-target-group"
-  port        = 9000
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "ip"
-
-  health_check {
-    path                = "/"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    matcher             = "200"
-  }
-}
-
-resource "aws_lb_listener" "http_listener" {
-  load_balancer_arn = aws_lb.medusa_alb.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.medusa_tg.arn
   }
 }
