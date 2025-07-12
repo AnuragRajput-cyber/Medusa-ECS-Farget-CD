@@ -76,14 +76,14 @@ resource "aws_ecs_task_definition" "medusa_task_definition" {
 }
 resource "aws_ecs_service" "medusa_service" {
   name            = "medusa-service"
-  cluster         = aws_ecs_cluster.medusa_cluster.id
-  task_definition = aws_ecs_task_definition.medusa_task.arn
+  cluster         = aws_ecs_cluster.medusa_Cluster.id
+  task_definition = aws_ecs_task_definition.medusa_task_definition.arn
   desired_count   = 1
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [aws_subnet.public_subnet_2]
-    security_groups  = [aws_security_group.ecs_sg.id]
+    subnets          = [aws_subnet.public_subnet_1]
+    security_groups  = [aws_security_group.medusa_sg]
     assign_public_ip = true
   }
 
@@ -101,7 +101,7 @@ resource "aws_lb" "medusa_alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.medusa_sg.id]
-  subnets            = [aws_subnet.public_subnet_1]
+  subnets            = [aws_subnet.public_subnet_2]
 }
 resource "aws_lb_target_group" "medusa_tg" {
   name        = "medusa-target-group"
