@@ -1,6 +1,7 @@
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
+
 resource "aws_subnet" "public_subnet_1" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
@@ -17,7 +18,8 @@ resource "aws_subnet" "public_subnet_2" {
 
 resource "aws_security_group" "medusa_sg" {
   name   = "ecs_security_group"
-  vpc_id = aws_vpc.main
+  vpc_id = aws_vpc.main.id
+
   ingress {
     description = "Allow HTTP"
     from_port   = 80
@@ -25,14 +27,15 @@ resource "aws_security_group" "medusa_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = -1
     cidr_blocks = ["0.0.0.0/0"]
-
   }
 }
+
 resource "aws_db_instance" "medusa_db" {
   allocated_storage   = 20
   engine              = "postgres"
@@ -41,6 +44,7 @@ resource "aws_db_instance" "medusa_db" {
   password            = var.DB_password
   skip_final_snapshot = true
 }
+
 resource "aws_ecr_repository" "medusaImage_repo" {
   name = "medusa-backend"
 }
@@ -48,6 +52,7 @@ resource "aws_ecr_repository" "medusaImage_repo" {
 resource "aws_ecs_cluster" "medusa_Cluster" {
   name = "medusa-cluster"
 }
+
 resource "aws_ecs_task_definition" "medusa_task_definition" {
   family                   = "medusa-task"
   network_mode             = "awsvpc"
@@ -55,25 +60,28 @@ resource "aws_ecs_task_definition" "medusa_task_definition" {
   cpu                      = "512"
   memory                   = "1024"
 
-  container_definitions = jsondecode([
-    { name      = "medusa",
-      image     = "${aws_ecr_repository.medusaImage_repo.repository_url}:latest"
-      essential = true
-      portMapping = [
+  container_definitions = jsonencode([
+    {
+      name      = "medusa",
+      image     = "${aws_ecr_repository.medusaImage_repo.repository_url}:latest",
+      essential = true,
+      portMappings = [
         { containerPort = 9000 }
-      ]
-      environment = [{
-        name  = "DATABASE_URL"
-        value = "postgres://postgres:${var.DB_password}@${aws_db_instance.medusa_db.address}:5432/medusadb"
+      ],
+      environment = [
+        {
+          name  = "DATABASE_URL",
+          value = "postgres://postgres:${var.DB_password}@${aws_db_instance.medusa_db.address}:5432/medusadb"
         },
         {
-          name  = "JWT_SECRET"
+          name  = "JWT_SECRET",
           value = "najfhaofjeoifihafn"
         }
       ]
     }
   ])
 }
+
 resource "aws_ecs_service" "medusa_service" {
   name            = "medusa-service"
   cluster         = aws_ecs_cluster.medusa_Cluster.id
@@ -82,8 +90,11 @@ resource "aws_ecs_service" "medusa_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [aws_subnet.public_subnet_1]
-    security_groups  = [aws_security_group.medusa_sg]
+    subnets = [
+      aws_subnet.public_subnet_1.id,
+      aws_subnet.public_subnet_2.id
+    ]
+    security_groups  = [aws_security_group.medusa_sg.id]
     assign_public_ip = true
   }
 
@@ -101,8 +112,12 @@ resource "aws_lb" "medusa_alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.medusa_sg.id]
-  subnets            = [aws_subnet.public_subnet_2]
+  subnets = [
+    aws_subnet.public_subnet_1.id,
+    aws_subnet.public_subnet_2.id
+  ]
 }
+
 resource "aws_lb_target_group" "medusa_tg" {
   name        = "medusa-target-group"
   port        = 9000
@@ -119,6 +134,7 @@ resource "aws_lb_target_group" "medusa_tg" {
     matcher             = "200"
   }
 }
+
 resource "aws_lb_listener" "http_listener" {
   load_balancer_arn = aws_lb.medusa_alb.arn
   port              = 80
@@ -129,6 +145,3 @@ resource "aws_lb_listener" "http_listener" {
     target_group_arn = aws_lb_target_group.medusa_tg.arn
   }
 }
-
-
-
