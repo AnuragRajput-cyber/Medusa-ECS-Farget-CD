@@ -29,10 +29,10 @@ jobs:
         run: docker build -f ./dockerfile -t medusa-backend ./medusa-backend
 
       - name: Tagging Docker image
-        run: docker tag medusa-backend:latest 061039787029.dkr.ecr.us-east-1.amazonaws.com/medusa-backend:latest
+        run: docker tag medusa-backend:latest public.ecr.aws/v7f0w4r6/medusa-backend:latest
 
       - name: Pushing Docker image
-        run: docker push 061039787029.dkr.ecr.us-east-1.amazonaws.com/medusa-backend:latest
+        run: docker push public.ecr.aws/v7f0w4r6/medusa-backend:latest
 
       - name: Terraform Init
         working-directory: ./terraform
