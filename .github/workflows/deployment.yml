@@ -9,7 +9,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: Production
-    
 
     steps:
       - name: Checking out the code
@@ -24,7 +23,6 @@ jobs:
 
       - name: Logging in to AWS ECR
         run: aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
-        
 
       - name: Building Docker image
         run: docker build -f ./dockerfile -t medusa-backend ./medusa-backend
@@ -34,13 +32,25 @@ jobs:
 
       - name: Pushing Docker image
         run: docker push public.ecr.aws/v7f0w4r6/medusa-backend:latest
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
+
       - name: Terraform Init
         working-directory: ./terraform
         run: terraform init
+
+      
+      - name: Terraform Import ECR Repository
+        working-directory: ./terraform
+        run: terraform import aws_ecr_repository.medusaImage_repo medusa-backend || echo "ECR repo already imported"
+
+
+      - name: Terraform Import Target Group
+        working-directory: ./terraform
+        run: terraform import aws_lb_target_group.medusa_tg arn:aws:elasticloadbalancing:us-east-1:YOUR_ACCOUNT_ID:targetgroup/medusa-target-group/XXXXXXXXXXXX || echo "Target group already imported"
 
       - name: Terraform Apply
         working-directory: ./terraform
