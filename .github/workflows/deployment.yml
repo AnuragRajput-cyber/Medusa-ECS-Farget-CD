@@ -41,11 +41,7 @@ jobs:
       - name: Terraform Init
         working-directory: ./terraform
         run: terraform init
-
-      - name: Terraform Import ECR Repository (optional safe import)
-        working-directory: ./terraform
-        run: terraform import aws_ecr_repository.medusaImage_repo medusa-backend || echo "Public ECR repo already managed"
-
+        
       - name: Terraform Plan
         working-directory: ./terraform
         run: terraform plan -auto-approve -var="DB_password=${{ secrets.DB_PASSWORD }}"
