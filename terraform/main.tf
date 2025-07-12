@@ -42,7 +42,7 @@ resource "aws_db_instance" "meedusa_db" {
   engine              = "postgres"
   instance_class      = db.t3.micro
   username            = "postgres"
-  password            = var.DB_password
+  password            = var.DB_PASSWORD
   skip_final_snapshot = true
 }
 resource "aws_ecr_repository" "medusaImage_repo" {
@@ -68,7 +68,7 @@ resource "aws_ecs_task_definition" "medusa_task_definition" {
       ]
       environment = [{
         name  = "DATABASE_URL"
-        value = "postgres://postgres:${var.DB_password}@${aws_db_instance.medusa_db.address}:5432/medusadb"
+        value = "postgres://postgres:${var.DB_PASSWORD}@${aws_db_instance.medusa_db.address}:5432/medusadb"
         },
         {
           name  = "JWT_SECRET"
