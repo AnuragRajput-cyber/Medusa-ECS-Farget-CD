@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "your-terraform-state-bucket"
+    bucket = "terraform-state-bucket-v2-anurag"
     key    = "medusa/terraform.tfstate"
     region = "us-east-1"
   }
