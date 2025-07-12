@@ -26,7 +26,11 @@ resource "aws_ecs_task_definition" "medusa_task_definition" {
         {
           name  = "JWT_SECRET"
           value = "your_jwt_secret_here"
-        }
+        },
+        {
+        name  = "DEPLOY_TIMESTAMP"
+        value = timestamp()
+        },
       ]
     }
   ])
