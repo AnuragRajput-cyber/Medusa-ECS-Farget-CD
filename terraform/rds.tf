@@ -14,5 +14,5 @@ resource "aws_db_instance" "medusa_db" {
   password             = var.DB_password
   skip_final_snapshot  = true
   db_subnet_group_name = aws_db_subnet_group.medusa_db_subnets.name
-  vpc_security_group_ids = [aws_security_group.medusa_sg.id]
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
 }

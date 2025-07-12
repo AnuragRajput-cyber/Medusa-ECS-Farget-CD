@@ -12,25 +12,25 @@ resource "aws_ecs_task_definition" "medusa_task_definition" {
 
   container_definitions = jsonencode([
     {
-      name      = "medusa"
-      image     = "public.ecr.aws/v7f0w4r6/medusa-backend:latest"
-      essential = true
+      name      = "medusa",
+      image     = "public.ecr.aws/v7f0w4r6/medusa-backend:latest",
+      essential = true,
       portMappings = [
         { containerPort = 9000 }
-      ]
+      ],
       environment = [
         {
-          name  = "DATABASE_URL"
+          name  = "DATABASE_URL",
           value = "postgres://postgres:${var.DB_password}@${aws_db_instance.medusa_db.address}:5432/medusadb"
         },
         {
-          name  = "JWT_SECRET"
+          name  = "JWT_SECRET",
           value = "your_jwt_secret_here"
         },
         {
-        name  = "DEPLOY_TIMESTAMP"
-        value = timestamp()
-        },
+          name  = "DEPLOY_TIMESTAMP",
+          value = timestamp()
+        }
       ]
     }
   ])
@@ -44,8 +44,11 @@ resource "aws_ecs_service" "medusa_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
-    security_groups = [aws_security_group.ecs_sg.id]
+    subnets          = [
+      aws_subnet.public_subnet_1.id,
+      aws_subnet.public_subnet_2.id
+    ]
+    security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
 
