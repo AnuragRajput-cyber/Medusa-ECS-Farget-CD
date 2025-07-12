@@ -45,7 +45,7 @@ resource "aws_ecs_service" "medusa_service" {
 
   network_configuration {
     subnets          = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
-    security_groups  = [aws_security_group.medusa_sg.id]
+    security_groups = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
 
