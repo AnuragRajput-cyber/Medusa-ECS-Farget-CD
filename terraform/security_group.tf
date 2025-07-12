@@ -48,7 +48,7 @@ resource "aws_security_group" "rds_sg" {
   description = "Allow Postgres from ECS tasks"
   vpc_id      = aws_vpc.main.id
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 
   ingress {
