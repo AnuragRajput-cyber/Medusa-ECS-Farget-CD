@@ -34,7 +34,10 @@ jobs:
 
       - name: Pushing Docker image
         run: docker push public.ecr.aws/v7f0w4r6/medusa-backend:latest
-
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
       - name: Terraform Init
         working-directory: ./terraform
         run: terraform init
