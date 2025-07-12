@@ -33,10 +33,10 @@ resource "aws_security_group" "medusa_sg" {
 
   }
 }
-resource "aws_db_instance" "meedusa_db" {
+resource "aws_db_instance" "medusa_db" {
   allocated_storage   = 20
   engine              = "postgres"
-  instance_class      = db.t3.micro
+  instance_class      = "db.t3.micro"
   username            = "postgres"
   password            = var.DB_password
   skip_final_snapshot = true
@@ -100,7 +100,7 @@ resource "aws_lb" "medusa_alb" {
   name               = "medusa-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb_sg.id]
+  security_groups    = [aws_security_group.medusa_sg.id]
   subnets            = [aws_subnet.public_subnet_1]
 }
 resource "aws_lb_target_group" "medusa_tg" {
