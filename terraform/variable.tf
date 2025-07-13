@@ -1,22 +1,28 @@
 variable "aws_region" {
-  description = "AWS Region"
+  description = "AWS region to deploy resources"
   default     = "us-east-1"
 }
 
 variable "app_name" {
-  description = "Name prefix for resources"
+  description = "Prefix for resource names"
   default     = "medusa"
 }
 
+variable "db_password" {
+  description = "Database password"
+  sensitive   = true
+}
+
 variable "container_port" {
-  default = 9000
+  description = "Container port"
+  default     = 9000
 }
 
 variable "desired_count" {
-  default = 1
+  description = "Number of ECS tasks"
+  default     = 1
 }
 
-variable "db_password" {
-  description = "Postgres DB password"
-  sensitive   = true
+variable "ecr_repo" {
+  description = "ECR repository URI (without tag)"
 }
