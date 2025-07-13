@@ -17,7 +17,7 @@ WORKDIR /app/medusa-store
 RUN npm install
 
 # Copy entrypoint script
-COPY ../scripts/entrypoint.sh .
+COPY entrypoint.sh .
 
 # Make script executable
 RUN chmod +x entrypoint.sh
