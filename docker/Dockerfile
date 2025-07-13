@@ -1,27 +1,28 @@
 FROM node:18-alpine
 
-# Install system dependencies
+# 1. Install system dependencies
 RUN apk add --no-cache python3 py3-pip make g++ postgresql-client
 
-# Install Medusa CLI
+# 2. Install Medusa CLI globally
 RUN npm install -g @medusajs/medusa-cli
 
-# Create and set working directory
+# 3. Create app directory structure
 WORKDIR /app
-
-# Create Medusa project
-RUN medusa new medusa-store --seed && \
-    cd medusa-store && \
-    npm install
-
-# Copy entrypoint
-COPY docker/entrypoint.sh /app/medusa-store/
-
-# Set final working directory
+RUN mkdir -p medusa-store
 WORKDIR /app/medusa-store
 
-# Make script executable
+# 4. Create Medusa project (with explicit path)
+RUN medusa new . --seed --no-install
+
+# 5. Install dependencies
+RUN npm install
+
+# 6. Copy entrypoint script
+COPY docker/entrypoint.sh .
+
+# 7. Make script executable
 RUN chmod +x entrypoint.sh
 
+# 8. Expose and configure runtime
 EXPOSE 9000
 ENTRYPOINT ["./entrypoint.sh"]
