@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   AWS_REGION: us-east-1
   ECR_REPO: 061039787029.dkr.ecr.us-east-1.amazonaws.com/medusa-repo
