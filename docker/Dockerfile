@@ -16,8 +16,11 @@ WORKDIR /app/medusa-store
 # Install dependencies
 RUN npm install
 
-# Copy entrypoint script
+# Change from:
 COPY entrypoint.sh .
+
+# To this (explicit path):
+COPY ./entrypoint.sh .
 
 # Make script executable
 RUN chmod +x entrypoint.sh
