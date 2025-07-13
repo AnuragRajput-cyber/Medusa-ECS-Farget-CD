@@ -16,11 +16,8 @@ WORKDIR /app/medusa-store
 # Install dependencies
 RUN npm install
 
-# Change from:
-COPY entrypoint.sh .
-
-# To this (explicit path):
-COPY ./entrypoint.sh .
+# Copy entrypoint script (using absolute path within build context)
+COPY docker/entrypoint.sh .
 
 # Make script executable
 RUN chmod +x entrypoint.sh
