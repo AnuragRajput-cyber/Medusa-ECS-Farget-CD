@@ -33,7 +33,7 @@ jobs:
 
       - name: Build, tag, and push image to ECR
         run: |
-          docker build -t medusa-repo .
+          docker build -f medusa-backend/dockerfile -t medusa-repo ./medusa-backend
           docker tag medusa-repo:latest $ECR_REPO:latest
           docker push $ECR_REPO:latest
 
